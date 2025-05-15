@@ -61,7 +61,13 @@ class _NewPostScreenState extends State<NewPostScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -70,101 +76,247 @@ class _NewPostScreenState extends State<NewPostScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Nueva Publicación')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      appBar: AppBar(
+        title: const Text('Nueva Publicación'),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Form(
           key: _formKey,
-          child: ListView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextFormField(
+              // Sección de Información Básica
+              _buildSectionHeader('Información Básica'),
+              const SizedBox(height: 16),
+              
+              // Campo Título
+              _buildTextField(
                 controller: _titleController,
-                decoration: const InputDecoration(labelText: 'Título'),
-                validator: (value) => value!.isEmpty ? 'Requerido' : null,
+                label: 'Título del producto',
+                hint: 'Ej: iPhone 13 Pro Max',
+                icon: Icons.title,
+                validator: (value) => value!.isEmpty ? 'Este campo es requerido' : null,
               ),
               const SizedBox(height: 16),
-              TextFormField(
+              
+              // Campo Precio
+              _buildTextField(
                 controller: _priceController,
-                decoration: const InputDecoration(
-                  labelText: 'Precio',
-                  prefixText: '\$',
-                ),
+                label: 'Precio',
+                hint: '0.00',
+                icon: Icons.attach_money,
                 keyboardType: TextInputType.number,
+                prefixText: '\$ ',
                 validator: (value) {
-                  if (value!.isEmpty) return 'Requerido';
-                  if (double.tryParse(value) == null) return 'Número inválido';
+                  if (value!.isEmpty) return 'Ingrese un precio';
+                  if (double.tryParse(value) == null) return 'Precio inválido';
                   return null;
                 },
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
+              
+              // Selector Categoría
+              _buildDropdown(
                 value: _selectedCategory,
-                decoration: const InputDecoration(labelText: 'Categoría'),
-                items: ['Electrónica', 'Muebles', 'Ropa', 'Libros']
-                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                    .toList(),
+                label: 'Categoría',
+                hint: 'Seleccione una categoría',
+                icon: Icons.category,
+                items: ['Electrónica', 'Muebles', 'Ropa', 'Libros', 'Otros'],
                 onChanged: (value) => setState(() => _selectedCategory = value),
                 validator: (value) => value == null ? 'Seleccione una categoría' : null,
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
+              
+              // Selector Condición
+              _buildDropdown(
                 value: _selectedCondition,
-                decoration: const InputDecoration(labelText: 'Condición'),
-                items: ['Nuevo', 'Como nuevo', 'Usado', 'Para partes']
-                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                    .toList(),
+                label: 'Condición',
+                hint: 'Seleccione la condición',
+                icon: Icons.assignment_turned_in,
+                items: ['Nuevo', 'Como nuevo', 'Usado', 'Para partes'],
                 onChanged: (value) => setState(() => _selectedCondition = value),
                 validator: (value) => value == null ? 'Seleccione una condición' : null,
               ),
+              const SizedBox(height: 24),
+              
+              // Sección de Ubicación
+              _buildSectionHeader('Ubicación y Contacto'),
               const SizedBox(height: 16),
-              TextFormField(
+              
+              // Campo Ubicación
+              _buildTextField(
                 controller: _locationController,
-                decoration: const InputDecoration(labelText: 'Ubicación'),
-                validator: (value) => value!.isEmpty ? 'Requerido' : null,
+                label: 'Ubicación',
+                hint: 'Ej: Av. San Martín #123',
+                icon: Icons.location_on,
+                validator: (value) => value!.isEmpty ? 'Ingrese una ubicación' : null,
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _selectedPaymentMethod,
-                decoration: const InputDecoration(labelText: 'Método de Pago'),
-                items: ['Efectivo', 'Transferencia', 'Tarjeta']
-                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                    .toList(),
-                onChanged: (value) => setState(() => _selectedPaymentMethod = value),
-                validator: (value) => value == null ? 'Seleccione un método' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Descripción'),
-                maxLines: 3,
-                validator: (value) => value!.isEmpty ? 'Requerido' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
+              
+              // Campo Teléfono
+              _buildTextField(
                 controller: _phoneController,
-                decoration: const InputDecoration(labelText: 'Teléfono'),
+                label: 'Teléfono de contacto',
+                hint: 'Ej: 77712345',
+                icon: Icons.phone,
                 keyboardType: TextInputType.phone,
                 validator: (value) {
-                  if (value!.isEmpty) return 'Requerido';
-                  if (value.length < 10) return 'Muy corto';
+                  if (value!.isEmpty) return 'Ingrese un teléfono';
+                  if (value.length < 7) return 'Teléfono muy corto';
                   return null;
                 },
               ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _submitForm,
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                ),
-                child: _isLoading
-                    ? const CircularProgressIndicator()
-                    : const Text('PUBLICAR'),
+              const SizedBox(height: 16),
+              
+              // Selector Método de Pago
+              _buildDropdown(
+                value: _selectedPaymentMethod,
+                label: 'Método de pago',
+                hint: 'Seleccione método de pago',
+                icon: Icons.payment,
+                items: ['Efectivo', 'Transferencia', 'Tarjeta', 'Otro'],
+                onChanged: (value) => setState(() => _selectedPaymentMethod = value),
+                validator: (value) => value == null ? 'Seleccione un método' : null,
               ),
+              const SizedBox(height: 24),
+              
+              // Sección Descripción
+              _buildSectionHeader('Descripción'),
+              const SizedBox(height: 16),
+              
+              // Campo Descripción
+              TextFormField(
+                controller: _descriptionController,
+                decoration: InputDecoration(
+                  labelText: 'Describa su producto',
+                  hintText: 'Incluya detalles importantes...',
+                  prefixIcon: const Icon(Icons.description),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: colors.surfaceVariant.withOpacity(0.3),
+                ),
+                maxLines: 5,
+                validator: (value) => value!.isEmpty ? 'Ingrese una descripción' : null,
+              ),
+              const SizedBox(height: 32),
+              
+              // Botón de Publicar
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _submitForm,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    backgroundColor: colors.primary,
+                    foregroundColor: colors.onPrimary,
+                    elevation: 2,
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'PUBLICAR PRODUCTO',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 24),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Text(
+      title,
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    String? hint,
+    IconData? icon,
+    TextInputType? keyboardType,
+    String? prefixText,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        prefixIcon: icon != null ? Icon(icon) : null,
+        prefixText: prefixText,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        filled: true,
+        fillColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+      ),
+      keyboardType: keyboardType,
+      validator: validator,
+    );
+  }
+
+  Widget _buildDropdown({
+    required String? value,
+    required String label,
+    required String hint,
+    required IconData icon,
+    required List<String> items,
+    required Function(String?) onChanged,
+    required String? Function(String?)? validator,
+  }) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        prefixIcon: Icon(icon),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        filled: true,
+        fillColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+      ),
+      items: items.map((item) => DropdownMenuItem(
+        value: item,
+        child: Text(item),
+      )).toList(),
+      onChanged: onChanged,
+      validator: validator,
+      dropdownColor: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(12),
+      icon: const Icon(Icons.arrow_drop_down),
+      isExpanded: true,
     );
   }
 }
